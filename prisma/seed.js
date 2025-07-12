@@ -10,6 +10,7 @@ const prisma = new PrismaClient({
 
 async function main() {
   console.log('🌱 Starting database seeding...');
+  console.log('🔄 Using updated seed script with proper deletion order...');
 
   // Clear all existing data in the correct order to avoid foreign key violations
   console.log('🗑️  Clearing existing data...');
