@@ -339,9 +339,31 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
 
       const savedMember = await response.json();
       
-      // Update local state with the saved member (includes ID from database)
-      setTeamMembers(prev => [...prev, savedMember]);
-      console.log('Team member saved to database:', savedMember);
+      // Transform the saved member to match frontend expectations
+      const transformedMember = {
+        id: savedMember.id,
+        name: savedMember.name,
+        email: savedMember.email,
+        phone: savedMember.phone,
+        position: savedMember.position,
+        startDate: savedMember.start_date ? new Date(savedMember.start_date).toLocaleDateString() : '',
+        startTime: '09:00', // Default time since not stored in DB
+        employeeId: savedMember.employee_id || '',
+        status: savedMember.status,
+        priority: savedMember.priority,
+        notes: savedMember.notes ? JSON.parse(savedMember.notes) : [],
+        checklistData: savedMember.checklist_data || {},
+        // Add computed fields that don't exist in DB
+        daysInOnboarding: 0,
+        completionPercentage: savedMember.status === 'COMPLETED' ? 100 : 0,
+        lastActivity: 'Never',
+        estimatedCompletion: '7 days',
+        assignedTrainer: 'Unassigned'
+      };
+      
+      // Update local state with the transformed member
+      setTeamMembers(prev => [...prev, transformedMember]);
+      console.log('Team member saved to database:', transformedMember);
     } catch (error) {
       console.error('Error saving team member:', error);
       alert('Failed to save team member. Please try again.');
@@ -436,8 +458,31 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
         throw new Error('Failed to fetch team members');
       }
       const data = await response.json();
-      setTeamMembers(data);
-      console.log('Team members loaded from database:', data);
+      
+      // Transform database response to match frontend expectations
+      const transformedData = data.map(member => ({
+        id: member.id,
+        name: member.name,
+        email: member.email,
+        phone: member.phone,
+        position: member.position,
+        startDate: member.start_date ? new Date(member.start_date).toLocaleDateString() : '',
+        startTime: '09:00', // Default time since not stored in DB
+        employeeId: member.employee_id || '',
+        status: member.status,
+        priority: member.priority,
+        notes: member.notes ? JSON.parse(member.notes) : [],
+        checklistData: member.checklist_data || {},
+        // Add computed fields that don't exist in DB
+        daysInOnboarding: 0, // Calculate based on start date
+        completionPercentage: member.status === 'COMPLETED' ? 100 : 0,
+        lastActivity: 'Never',
+        estimatedCompletion: '7 days',
+        assignedTrainer: 'Unassigned'
+      }));
+      
+      setTeamMembers(transformedData);
+      console.log('Team members loaded from database:', transformedData);
     } catch (error) {
       console.error('Error fetching team members:', error);
     }
