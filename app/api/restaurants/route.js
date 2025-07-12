@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../lib/supabase';
 
-// GET /api/restaurants - Get all restaurants
+// GET /api/restaurants - Get all restaurants with stats
 export async function GET() {
   try {
     const { data: restaurants, error } = await supabase
@@ -17,8 +17,83 @@ export async function GET() {
       );
     }
 
-    console.log('✅ Fetched restaurants:', restaurants?.length || 0);
-    return NextResponse.json(restaurants || []);
+    // Fetch team members for each restaurant and calculate stats
+    const restaurantsWithStats = await Promise.all(
+      restaurants.map(async (restaurant) => {
+        try {
+          // Fetch team members for this restaurant
+          const { data: teamMembers, error: teamError } = await supabase
+            .from('team_members')
+            .select('*')
+            .eq('restaurant_id', restaurant.id);
+
+          if (teamError) {
+            console.error(`❌ Error fetching team members for restaurant ${restaurant.id}:`, teamError);
+            return {
+              ...restaurant,
+              stats: {
+                totalMembers: 0,
+                completed: 0,
+                inProgress: 0,
+                notStarted: 0
+              }
+            };
+          }
+
+          // Calculate stats based on checklist progress
+          let completed = 0;
+          let inProgress = 0;
+          let notStarted = 0;
+
+          teamMembers.forEach(member => {
+            if (member.checklist_progress) {
+              const progress = member.checklist_progress;
+              const totalItems = Object.keys(progress).length;
+              const completedItems = Object.values(progress).filter(item => item.completed).length;
+              const completionPercentage = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+
+              if (completionPercentage >= 80) {
+                completed++;
+              } else if (completionPercentage > 0) {
+                inProgress++;
+              } else {
+                notStarted++;
+              }
+            } else {
+              notStarted++;
+            }
+          });
+
+          const stats = {
+            totalMembers: teamMembers.length,
+            completed,
+            inProgress,
+            notStarted
+          };
+
+          console.log(`📊 Restaurant ${restaurant.name} stats:`, stats);
+
+          return {
+            ...restaurant,
+            stats
+          };
+        } catch (error) {
+          console.error(`❌ Error calculating stats for restaurant ${restaurant.id}:`, error);
+          return {
+            ...restaurant,
+            stats: {
+              totalMembers: 0,
+              completed: 0,
+              inProgress: 0,
+              notStarted: 0
+            }
+          };
+        }
+      })
+    );
+
+    console.log('✅ Fetched restaurants with stats:', restaurantsWithStats.length);
+    return NextResponse.json(restaurantsWithStats || []);
   } catch (error) {
     console.error('❌ API error:', error);
     return NextResponse.json(
