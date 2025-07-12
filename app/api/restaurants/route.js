@@ -74,23 +74,39 @@ export async function DELETE(request) {
       );
     }
     
-    console.log('✅ Found restaurant:', existingRestaurant.name);
+    // Delete associated data first
+    await prisma.teamMember.deleteMany({
+      where: { restaurantId: parseInt(id) }
+    });
     
-    // Delete the restaurant
-    const deletedRestaurant = await prisma.restaurant.delete({
+    await prisma.checklistTask.deleteMany({
+      where: { 
+        template: {
+          restaurantId: parseInt(id)
+        }
+      }
+    });
+    
+    await prisma.checklistTemplate.deleteMany({
+      where: { restaurantId: parseInt(id) }
+    });
+    
+    // Now delete the restaurant
+    await prisma.restaurant.delete({
       where: { id: parseInt(id) }
     });
     
-    console.log('✅ Successfully deleted restaurant:', deletedRestaurant.name);
+    console.log('✅ Successfully deleted restaurant:', existingRestaurant.name);
     
-    return NextResponse.json({ 
-      message: 'Restaurant deleted successfully',
-      deletedRestaurant: deletedRestaurant.name
-    });
+    return NextResponse.json(
+      { message: 'Restaurant deleted successfully' },
+      { status: 200 }
+    );
+    
   } catch (error) {
     console.error('❌ Error deleting restaurant:', error);
     return NextResponse.json(
-      { error: `Failed to delete restaurant: ${error.message}` },
+      { error: 'Failed to delete restaurant', details: error.message },
       { status: 500 }
     );
   }
