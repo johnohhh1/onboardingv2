@@ -35,20 +35,23 @@ export async function PUT(request, { params }) {
   try {
     const body = await request.json();
     
-    const restaurant = await prisma.restaurant.update({
+    const updatedRestaurant = await prisma.restaurant.update({
       where: { id: params.id },
       data: {
         name: body.name,
         code: body.code,
         location: body.location,
-        address: body.address,
         phone: body.phone,
         email: body.email,
-        timezone: body.timezone || 'America/Detroit'
+        // Store manager in settings since it's not a direct field
+        settings: {
+          ...body.settings,
+          manager: body.manager
+        }
       }
     });
     
-    return NextResponse.json(restaurant);
+    return NextResponse.json(updatedRestaurant);
   } catch (error) {
     console.error('Error updating restaurant:', error);
     return NextResponse.json(

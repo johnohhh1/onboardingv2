@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Building2, Users, Search, ArrowRight, MapPin, User, Phone, Mail, Settings, Edit2, X, Save } from 'lucide-react'
 import AreaManagerDashboard from '../components/AreaManagerDashboard'
 import RestaurantDashboard from '../components/RestaurantDashboard'
@@ -17,10 +17,31 @@ const RestaurantEditModal = ({ isOpen, onClose, restaurant, onSave }) => {
     phone: restaurant?.phone || ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({ ...restaurant, ...formData });
-    onClose();
+    
+    try {
+      // Save to database
+      const response = await fetch(`/api/restaurants/${restaurant.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const updatedRestaurant = await response.json();
+        onSave(updatedRestaurant);
+        onClose();
+      } else {
+        console.error('Failed to update restaurant');
+        alert('Failed to update restaurant. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating restaurant:', error);
+      alert('Error updating restaurant. Please try again.');
+    }
   };
 
   if (!isOpen) return null;
@@ -138,78 +159,34 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingRestaurant, setEditingRestaurant] = useState(null)
+  const [restaurants, setRestaurants] = useState([])
+  const [loading, setLoading] = useState(true)
   
-  // Initial restaurant data
-  const [restaurants, setRestaurants] = useState([
-    {
-      id: 1, 
-      name: "Chili's Auburn Hills", 
-      code: "605", 
-      location: "Auburn Hills, MI", 
-      manager: "John Olenski",
-      email: "john.olenski@chilis.com",
-      phone: "(248) 555-0123"
-    },
-    {
-      id: 2, 
-      name: "Chili's Shelby", 
-      code: "420", 
-      location: "Shelby, MI", 
-      manager: "Mike Rodriguez",
-      email: "mike.rodriguez@chilis.com",
-      phone: "(586) 555-0124"
-    },
-    {
-      id: 3, 
-      name: "Chili's Fort Gratiot", 
-      code: "330", 
-      location: "Fort Gratiot, MI", 
-      manager: "Sarah Johnson",
-      email: "sarah.johnson@chilis.com",
-      phone: "(810) 555-0125"
-    },
-    {
-      id: 4, 
-      name: "Chili's O-Mall", 
-      code: "240", 
-      location: "O-Mall, MI", 
-      manager: "Lisa Chen",
-      email: "lisa.chen@chilis.com",
-      phone: "(248) 555-0126"
-    },
-    {
-      id: 5, 
-      name: "Chili's Warren", 
-      code: "180", 
-      location: "Warren, MI", 
-      manager: "Bob Wilson",
-      email: "bob.wilson@chilis.com",
-      phone: "(586) 555-0127"
-    },
-    {
-      id: 6, 
-      name: "Chili's Gratiot", 
-      code: "150", 
-      location: "Gratiot, MI", 
-      manager: "Emma Davis",
-      email: "emma.davis@chilis.com",
-      phone: "(586) 555-0128"
-    },
-    {
-      id: 7, 
-      name: "Chili's Rochester", 
-      code: "510", 
-      location: "Rochester, MI", 
-      manager: "Tom Brown",
-      email: "tom.brown@chilis.com",
-      phone: "(248) 555-0129"
-    }
-  ]);
+  // Fetch restaurants from database
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const response = await fetch('/api/restaurants');
+        if (response.ok) {
+          const data = await response.json();
+          setRestaurants(data);
+        } else {
+          console.error('Failed to fetch restaurants');
+        }
+      } catch (error) {
+        console.error('Error fetching restaurants:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
 
   const filteredRestaurants = restaurants.filter(restaurant =>
     restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     restaurant.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    restaurant.manager.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (restaurant.settings?.manager || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     restaurant.code.includes(searchTerm)
   )
 
@@ -218,7 +195,8 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
     setShowEditModal(true);
   };
 
-  const handleSaveRestaurant = (updatedRestaurant) => {
+  const handleSaveRestaurant = async (updatedRestaurant) => {
+    // Update local state
     setRestaurants(prev => 
       prev.map(restaurant => 
         restaurant.id === updatedRestaurant.id ? updatedRestaurant : restaurant
@@ -226,6 +204,17 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
     );
     setShowEditModal(false);
     setEditingRestaurant(null);
+    
+    // Refresh data from database to ensure consistency
+    try {
+      const response = await fetch('/api/restaurants');
+      if (response.ok) {
+        const data = await response.json();
+        setRestaurants(data);
+      }
+    } catch (error) {
+      console.error('Error refreshing restaurants:', error);
+    }
   };
 
   const handleRestaurantClick = (restaurant) => {
@@ -300,74 +289,83 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
         </div>
 
         {/* Restaurant Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRestaurants.map(restaurant => (
-            <div
-              key={restaurant.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-red-300 dark:hover:border-red-500 transition-all duration-200 transform hover:scale-105"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="bg-red-100 dark:bg-red-900 p-3 rounded-lg transition-colors duration-200">
-                    <Building2 className="text-red-600 dark:text-red-400" size={24} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs font-bold px-2 py-1 rounded-full transition-colors duration-200">
-                      #{restaurant.code}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditRestaurant(restaurant);
-                      }}
-                      className="text-gray-400 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 p-1 rounded transition-colors duration-200"
-                      title="Edit Restaurant"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                  </div>
-                </div>
-                
-                <div 
-                  onClick={() => handleRestaurantClick(restaurant)}
-                  className="cursor-pointer"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 transition-colors duration-200">{restaurant.name}</h3>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                      <MapPin size={14} />
-                      {restaurant.location}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                      <User size={14} />
-                      {restaurant.manager}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                      <Phone size={14} />
-                      {restaurant.phone}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                      <Mail size={14} />
-                      {restaurant.email}
-                    </div>
-                  </div>
-
-                  <button className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                    <ArrowRight size={16} />
-                    Enter Restaurant
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredRestaurants.length === 0 && (
+        {loading ? (
           <div className="text-center py-12">
-            <Building2 className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
-            <p className="text-gray-600 dark:text-gray-400">No restaurants found matching your search.</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading restaurants...</p>
           </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredRestaurants.map(restaurant => (
+                <div
+                  key={restaurant.id}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-red-300 dark:hover:border-red-500 transition-all duration-200 transform hover:scale-105"
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="bg-red-100 dark:bg-red-900 p-3 rounded-lg transition-colors duration-200">
+                        <Building2 className="text-red-600 dark:text-red-400" size={24} />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs font-bold px-2 py-1 rounded-full transition-colors duration-200">
+                          #{restaurant.code}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditRestaurant(restaurant);
+                          }}
+                          className="text-gray-400 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 p-1 rounded transition-colors duration-200"
+                          title="Edit Restaurant"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      onClick={() => handleRestaurantClick(restaurant)}
+                      className="cursor-pointer"
+                    >
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 transition-colors duration-200">{restaurant.name}</h3>
+                      
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                          <MapPin size={14} />
+                          {restaurant.location}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                          <User size={14} />
+                          {restaurant.settings?.manager || 'Not set'}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                          <Phone size={14} />
+                          {restaurant.phone}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
+                          <Mail size={14} />
+                          {restaurant.email}
+                        </div>
+                      </div>
+
+                      <button className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                        <ArrowRight size={16} />
+                        Enter Restaurant
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filteredRestaurants.length === 0 && (
+              <div className="text-center py-12">
+                <Building2 className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
+                <p className="text-gray-600 dark:text-gray-400">No restaurants found matching your search.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
