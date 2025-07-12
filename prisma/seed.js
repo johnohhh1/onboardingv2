@@ -30,6 +30,51 @@ async function main() {
       phone: "(586) 555-0124",
       email: "",
       timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Rochester",
+      code: "316",
+      location: "Rochester, MI",
+      address: "316 Rochester Rd, Rochester, MI 48307",
+      phone: "(248) 555-0125",
+      email: "",
+      timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Warren",
+      code: "195",
+      location: "Warren, MI",
+      address: "195 Warren Blvd, Warren, MI 48088",
+      phone: "(586) 555-0126",
+      email: "",
+      timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Auburn Hills",
+      code: "1422",
+      location: "Auburn Hills, MI",
+      address: "1422 Squirrel Rd, Auburn Hills, MI 48326",
+      phone: "(248) 555-0127",
+      email: "",
+      timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Sterling Heights",
+      code: "789",
+      location: "Sterling Heights, MI",
+      address: "789 Hall Rd, Sterling Heights, MI 48310",
+      phone: "(586) 555-0128",
+      email: "",
+      timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Troy",
+      code: "456",
+      location: "Troy, MI",
+      address: "456 Big Beaver Rd, Troy, MI 48083",
+      phone: "(248) 555-0129",
+      email: "",
+      timezone: "America/Detroit"
     }
   ];
 
