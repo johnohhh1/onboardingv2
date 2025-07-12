@@ -23,26 +23,37 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     const body = await request.json();
+    console.log('Updating team member with data:', body);
+    
+    const updateData = {
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      position: body.position,
+      start_date: body.startDate,
+      start_time: body.startTime,
+      employee_id: body.employeeId,
+      restaurant_id: body.restaurantId, // This should match the database column
+      assigned_to_id: body.assignedToId,
+      status: body.status,
+      completion_date: body.completionDate
+    };
+    
+    console.log('Team member data to update:', updateData);
+    
     const { data: teamMember, error } = await supabase
       .from('team_members')
-      .update({
-        name: body.name,
-        email: body.email,
-        phone: body.phone,
-        position: body.position,
-        start_date: body.startDate,
-        start_time: body.startTime,
-        employee_id: body.employeeId,
-        assigned_to_id: body.assignedToId,
-        status: body.status,
-        completion_date: body.completionDate
-      })
+      .update(updateData)
       .eq('id', params.id)
       .select()
       .single();
+      
     if (error) {
-      return NextResponse.json({ error: 'Failed to update team member' }, { status: 500 });
+      console.error('❌ Supabase error:', error);
+      return NextResponse.json({ error: `Failed to update team member: ${error.message}` }, { status: 500 });
     }
+    
+    console.log('✅ Team member updated successfully:', teamMember);
     return NextResponse.json(teamMember);
   } catch (error) {
     console.error('Error updating team member:', error);
@@ -58,7 +69,8 @@ export async function DELETE(request, { params }) {
       .delete()
       .eq('id', params.id);
     if (error) {
-      return NextResponse.json({ error: 'Failed to delete team member' }, { status: 500 });
+      console.error('❌ Supabase error:', error);
+      return NextResponse.json({ error: `Failed to delete team member: ${error.message}` }, { status: 500 });
     }
     return NextResponse.json({ message: 'Team member deleted successfully' });
   } catch (error) {

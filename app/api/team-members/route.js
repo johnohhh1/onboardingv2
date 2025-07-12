@@ -27,26 +27,35 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
+    console.log('Creating team member with data:', body);
+    
+    const teamMemberData = {
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      position: body.position,
+      start_date: body.startDate,
+      start_time: body.startTime,
+      employee_id: body.employeeId,
+      restaurant_id: body.restaurantId, // This should match the database column
+      assigned_to_id: body.assignedToId,
+      status: body.status || 'NOT_STARTED'
+    };
+    
+    console.log('Team member data to insert:', teamMemberData);
+    
     const { data: teamMember, error } = await supabase
       .from('team_members')
-      .insert([{
-        name: body.name,
-        email: body.email,
-        phone: body.phone,
-        position: body.position,
-        start_date: body.startDate,
-        start_time: body.startTime,
-        employee_id: body.employeeId,
-        restaurant_id: body.restaurantId,
-        assigned_to_id: body.assignedToId,
-        status: body.status || 'NOT_STARTED'
-      }])
+      .insert([teamMemberData])
       .select()
       .single();
+      
     if (error) {
       console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 });
+      return NextResponse.json({ error: `Failed to create team member: ${error.message}` }, { status: 500 });
     }
+    
+    console.log('✅ Team member created successfully:', teamMember);
     return NextResponse.json(teamMember, { status: 201 });
   } catch (error) {
     console.error('Error creating team member:', error);
