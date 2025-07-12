@@ -319,27 +319,90 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
   };
 
   // Function to add new team member
-  const handleAddTeamMember = (memberData) => {
-    setTeamMembers(prev => [...prev, memberData]);
-    console.log('Team member added:', memberData);
+  const handleAddTeamMember = async (memberData) => {
+    try {
+      // Save to database
+      const response = await fetch('/api/team-members', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...memberData,
+          restaurantId: restaurant.id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save team member');
+      }
+
+      const savedMember = await response.json();
+      
+      // Update local state with the saved member (includes ID from database)
+      setTeamMembers(prev => [...prev, savedMember]);
+      console.log('Team member saved to database:', savedMember);
+    } catch (error) {
+      console.error('Error saving team member:', error);
+      alert('Failed to save team member. Please try again.');
+    }
   };
 
   // Function to edit team member
-  const handleEditTeamMember = (memberData) => {
-    setTeamMembers(prev => 
-      prev.map(member => 
-        member.id === memberData.id ? memberData : member
-      )
-    );
-    setEditingMember(null);
-    console.log('Team member updated:', memberData);
+  const handleEditTeamMember = async (memberData) => {
+    try {
+      // Save to database
+      const response = await fetch(`/api/team-members/${memberData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...memberData,
+          restaurantId: restaurant.id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update team member');
+      }
+
+      const updatedMember = await response.json();
+      
+      // Update local state
+      setTeamMembers(prev => 
+        prev.map(member => 
+          member.id === memberData.id ? updatedMember : member
+        )
+      );
+      setEditingMember(null);
+      console.log('Team member updated in database:', updatedMember);
+    } catch (error) {
+      console.error('Error updating team member:', error);
+      alert('Failed to update team member. Please try again.');
+    }
   };
 
   // Function to delete team member (for quitters)
-  const handleDeleteTeamMember = (memberId) => {
+  const handleDeleteTeamMember = async (memberId) => {
     if (window.confirm('Are you sure you want to delete this team member? This action cannot be undone.')) {
-      setTeamMembers(prev => prev.filter(member => member.id !== memberId));
-      console.log('Team member deleted:', memberId);
+      try {
+        // Delete from database
+        const response = await fetch(`/api/team-members/${memberId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete team member');
+        }
+
+        // Update local state
+        setTeamMembers(prev => prev.filter(member => member.id !== memberId));
+        console.log('Team member deleted from database:', memberId);
+      } catch (error) {
+        console.error('Error deleting team member:', error);
+        alert('Failed to delete team member. Please try again.');
+      }
     }
   };
 
@@ -364,6 +427,26 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
       console.log('Team member completed and removed from queue:', memberId);
     }
   };
+
+  // Function to load team members from database
+  const fetchTeamMembers = async () => {
+    try {
+      const response = await fetch(`/api/team-members?restaurantId=${restaurant.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch team members');
+      }
+      const data = await response.json();
+      setTeamMembers(data);
+      console.log('Team members loaded from database:', data);
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+    }
+  };
+
+  // Load team members when component mounts
+  useEffect(() => {
+    fetchTeamMembers();
+  }, [restaurant.id]);
 
   // Function to update success stats
   const updateSuccessStats = () => {
