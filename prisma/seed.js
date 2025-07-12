@@ -32,7 +32,7 @@ async function main() {
       timezone: "America/Detroit"
     },
     {
-      name: "Chili's Micky",
+      name: "Chili's Rochester",
       code: "316",
       location: "Rochester, MI",
       address: "316 Rochester Rd, Rochester, MI 48307",
@@ -41,7 +41,7 @@ async function main() {
       timezone: "America/Detroit"
     },
     {
-      name: "Chili's Brad",
+      name: "Chili's Warren",
       code: "195",
       location: "Warren, MI",
       address: "195 Warren Blvd, Warren, MI 48088",
@@ -50,11 +50,11 @@ async function main() {
       timezone: "America/Detroit"
     },
     {
-      name: "Chili's Keith",
+      name: "Chili's Auburn Hills",
       code: "1422",
-      location: "Gratiot, MI",
-      address: "1422 Gratiot Ave, Gratiot, MI 48088",
-      phone: "(586) 555-0127",
+      location: "Auburn Hills, MI",
+      address: "1422 Squirrel Rd, Auburn Hills, MI 48326",
+      phone: "(248) 555-0127",
       email: "",
       timezone: "America/Detroit"
     }
