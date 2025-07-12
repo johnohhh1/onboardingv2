@@ -1,18 +1,28 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
+import { supabase } from '@/lib/supabase';
 
 // GET /api/restaurants - Get all restaurants
 export async function GET() {
   try {
-    const restaurants = await prisma.restaurant.findMany({
-      orderBy: { name: 'asc' }
-    });
-    
-    return NextResponse.json(restaurants);
+    const { data: restaurants, error } = await supabase
+      .from('restaurants')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      console.error('❌ Supabase error:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch restaurants' },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ Fetched restaurants:', restaurants?.length || 0);
+    return NextResponse.json(restaurants || []);
   } catch (error) {
-    console.error('Error fetching restaurants:', error);
+    console.error('❌ API error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch restaurants' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -21,25 +31,65 @@ export async function GET() {
 // POST /api/restaurants - Create a new restaurant
 export async function POST(request) {
   try {
-    const body = await request.json();
+    const restaurantData = await request.json();
     
-    const restaurant = await prisma.restaurant.create({
-      data: {
-        name: body.name,
-        code: body.code,
-        location: body.location,
-        address: body.address,
-        phone: body.phone,
-        email: body.email,
-        timezone: body.timezone || 'America/Detroit'
-      }
-    });
+    console.log('🍽️  Creating restaurant:', restaurantData.name);
     
+    const { data: restaurant, error } = await supabase
+      .from('restaurants')
+      .insert([restaurantData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Supabase error:', error);
+      return NextResponse.json(
+        { error: 'Failed to create restaurant' },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ Created restaurant:', restaurant.name);
     return NextResponse.json(restaurant, { status: 201 });
   } catch (error) {
-    console.error('Error creating restaurant:', error);
+    console.error('❌ API error:', error);
     return NextResponse.json(
-      { error: 'Failed to create restaurant' },
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/restaurants - Update a restaurant
+export async function PUT(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    const restaurantData = await request.json();
+    
+    console.log('🔄 Updating restaurant with ID:', id);
+    
+    const { data: restaurant, error } = await supabase
+      .from('restaurants')
+      .update(restaurantData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Supabase error:', error);
+      return NextResponse.json(
+        { error: 'Failed to update restaurant' },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ Updated restaurant:', restaurant.name);
+    return NextResponse.json(restaurant);
+  } catch (error) {
+    console.error('❌ API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -51,7 +101,7 @@ export async function DELETE(request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
-    console.log('🗑️  Attempting to delete restaurant with ID:', id);
+    console.log('🗑️  Deleting restaurant with ID:', id);
     
     if (!id) {
       console.error('❌ No restaurant ID provided');
@@ -60,53 +110,26 @@ export async function DELETE(request) {
         { status: 400 }
       );
     }
-    
-    // First check if restaurant exists
-    const existingRestaurant = await prisma.restaurant.findUnique({
-      where: { id: parseInt(id) }
-    });
-    
-    if (!existingRestaurant) {
-      console.error('❌ Restaurant not found with ID:', id);
+
+    const { error } = await supabase
+      .from('restaurants')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ Supabase error:', error);
       return NextResponse.json(
-        { error: 'Restaurant not found' },
-        { status: 404 }
+        { error: 'Failed to delete restaurant' },
+        { status: 500 }
       );
     }
-    
-    // Delete associated data first
-    await prisma.teamMember.deleteMany({
-      where: { restaurantId: parseInt(id) }
-    });
-    
-    await prisma.checklistTask.deleteMany({
-      where: { 
-        template: {
-          restaurantId: parseInt(id)
-        }
-      }
-    });
-    
-    await prisma.checklistTemplate.deleteMany({
-      where: { restaurantId: parseInt(id) }
-    });
-    
-    // Now delete the restaurant
-    await prisma.restaurant.delete({
-      where: { id: parseInt(id) }
-    });
-    
-    console.log('✅ Successfully deleted restaurant:', existingRestaurant.name);
-    
-    return NextResponse.json(
-      { message: 'Restaurant deleted successfully' },
-      { status: 200 }
-    );
-    
+
+    console.log('✅ Deleted restaurant with ID:', id);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('❌ Error deleting restaurant:', error);
+    console.error('❌ API error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete restaurant', details: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

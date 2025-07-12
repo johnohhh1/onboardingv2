@@ -10,24 +10,40 @@ const prisma = new PrismaClient({
 
 async function main() {
   console.log('🌱 Starting database seeding...');
-  console.log('🔄 Using updated seed script with proper deletion order...');
+  console.log('🔄 Using updated seed script for Supabase...');
 
   try {
-    // Clear all existing data in the correct order to avoid foreign key violations
-    console.log('🗑️  Clearing existing data...');
+    // Check if tables exist before trying to delete
+    console.log('🗑️  Checking existing data...');
     
-    // Delete in order: tasks -> templates -> team members -> restaurants
-    await prisma.checklistTask.deleteMany({});
-    console.log('✅ Cleared checklist tasks');
+    // Try to delete existing data, but don't fail if tables don't exist
+    try {
+      await prisma.checklistTask.deleteMany({});
+      console.log('✅ Cleared checklist tasks');
+    } catch (error) {
+      console.log('ℹ️  No checklist tasks table to clear');
+    }
     
-    await prisma.checklistTemplate.deleteMany({});
-    console.log('✅ Cleared checklist templates');
+    try {
+      await prisma.checklistTemplate.deleteMany({});
+      console.log('✅ Cleared checklist templates');
+    } catch (error) {
+      console.log('ℹ️  No checklist templates table to clear');
+    }
     
-    await prisma.teamMember.deleteMany({});
-    console.log('✅ Cleared team members');
+    try {
+      await prisma.teamMember.deleteMany({});
+      console.log('✅ Cleared team members');
+    } catch (error) {
+      console.log('ℹ️  No team members table to clear');
+    }
     
-    await prisma.restaurant.deleteMany({});
-    console.log('✅ Cleared all restaurants');
+    try {
+      await prisma.restaurant.deleteMany({});
+      console.log('✅ Cleared restaurants');
+    } catch (error) {
+      console.log('ℹ️  No restaurants table to clear');
+    }
 
     // Create exactly 7 restaurants as specified
     const restaurants = [
@@ -44,7 +60,7 @@ async function main() {
         name: "Chili's O-Mall",
         code: "316",
         location: "Troy, MI",
-        address: "1234 Rochester Rd, Troy, MI 48083",
+        address: "201 E Big Beaver Rd, Troy, MI 48083",
         phone: "(248) 555-0124",
         email: "",
         timezone: "America/Detroit"
@@ -53,7 +69,7 @@ async function main() {
         name: "Chili's Fort Gratiot",
         code: "1107",
         location: "Fort Gratiot, MI",
-        address: "5678 Gratiot Ave, Fort Gratiot, MI 48059",
+        address: "4320 24th Ave, Fort Gratiot, MI 48059",
         phone: "(810) 555-0125",
         email: "",
         timezone: "America/Detroit"
@@ -62,7 +78,7 @@ async function main() {
         name: "Chili's Rochester",
         code: "195",
         location: "Rochester, MI",
-        address: "9012 Rochester Rd, Rochester, MI 48307",
+        address: "300 S Main St, Rochester, MI 48307",
         phone: "(248) 555-0126",
         email: "",
         timezone: "America/Detroit"
@@ -70,8 +86,8 @@ async function main() {
       {
         name: "Chili's Gratiot Avenue",
         code: "954",
-        location: "Clinton Township, MI",
-        address: "3456 Gratiot Ave, Clinton Township, MI 48035",
+        location: "Roseville, MI",
+        address: "28000 Gratiot Ave, Roseville, MI 48066",
         phone: "(586) 555-0127",
         email: "",
         timezone: "America/Detroit"
@@ -80,7 +96,7 @@ async function main() {
         name: "Chili's Warren",
         code: "1422",
         location: "Warren, MI",
-        address: "7890 Hall Rd, Warren, MI 48088",
+        address: "31000 Van Dyke Ave, Warren, MI 48093",
         phone: "(586) 555-0128",
         email: "",
         timezone: "America/Detroit"
@@ -89,14 +105,15 @@ async function main() {
         name: "Chili's Shelby Creek",
         code: "734",
         location: "Shelby Township, MI",
-        address: "4567 Hall Rd, Shelby Township, MI 48315",
+        address: "14150 Hall Rd, Shelby Township, MI 48315",
         phone: "(586) 555-0129",
         email: "",
         timezone: "America/Detroit"
       }
     ];
 
-    console.log('🏪 Creating restaurants...');
+    console.log('🍽️  Creating restaurants...');
+    
     for (const restaurantData of restaurants) {
       const restaurant = await prisma.restaurant.create({
         data: restaurantData

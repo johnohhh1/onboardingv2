@@ -389,7 +389,6 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
                 </div>
               ))}
             </div>
-            {/* Fix: Move the conditional rendering outside the fragment to avoid JSX ambiguity */}
             {filteredRestaurants.length === 0 && (
               <div className="text-center py-12">
                 <Building2 className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
