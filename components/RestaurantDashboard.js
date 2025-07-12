@@ -218,6 +218,54 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
     return "bg-gray-400 text-gray-800"
   }
 
+  // Helper function to calculate days since start date
+  const calculateDaysInOnboarding = (startDate) => {
+    if (!startDate) return 0;
+    const start = new Date(startDate);
+    const today = new Date();
+    const diffTime = Math.abs(today - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
+  // Helper function to get last activity timestamp
+  const getLastActivity = (member) => {
+    const checklistData = member.checklistData || {};
+    const completedTasks = Object.values(checklistData).filter(task => task.completed);
+    
+    if (completedTasks.length === 0) return "Never";
+    
+    // Find the most recent completion
+    const lastCompleted = completedTasks.reduce((latest, task) => {
+      if (!task.completedAt) return latest;
+      const taskDate = new Date(task.completedAt);
+      if (!latest || taskDate > latest) return taskDate;
+      return latest;
+    }, null);
+    
+    if (!lastCompleted) return "Never";
+    
+    // Format as relative time
+    const now = new Date();
+    const diffMs = now - lastCompleted;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffMinutes > 0) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    return "Just now";
+  }
+
+  // Helper function to calculate estimated completion
+  const calculateEstimatedCompletion = (startDate, estimatedDays = 7) => {
+    if (!startDate) return "N/A";
+    const start = new Date(startDate);
+    const estimatedDate = new Date(start.getTime() + (estimatedDays * 24 * 60 * 60 * 1000));
+    return estimatedDate.toLocaleDateString();
+  }
+
   const [teamMembers, setTeamMembers] = useState([
     {
       id: "tm_1",
@@ -531,11 +579,11 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
           notes: member.notes ? JSON.parse(member.notes) : [],
           checklistData: checklistData,
           // Add computed fields that don't exist in DB
-          daysInOnboarding: 0, // Calculate based on start date
+          daysInOnboarding: calculateDaysInOnboarding(member.start_date),
           completionPercentage: completionPercentage,
-          lastActivity: 'Never',
-          estimatedCompletion: '7 days',
-          assignedTrainer: 'Unassigned'
+          lastActivity: getLastActivity({ checklistData }),
+          estimatedCompletion: calculateEstimatedCompletion(member.start_date),
+          assignedTrainer: member.assigned_trainer || 'Unassigned'
         };
       });
       
@@ -807,10 +855,10 @@ ${currentRestaurant.name}
           status: getStatusText(progressPercentage),
           progressPercentage: progressPercentage,
           lastCompletedStep: lastCompletedStep,
-          daysInOnboarding: member.daysInOnboarding,
-          assignedTrainer: member.assignedTrainer,
-          lastActivity: member.lastActivity,
-          estimatedCompletion: member.estimatedCompletion || 'N/A'
+          daysInOnboarding: calculateDaysInOnboarding(member.startDate),
+          assignedTrainer: member.assignedTrainer || 'Unassigned',
+          lastActivity: getLastActivity(member),
+          estimatedCompletion: calculateEstimatedCompletion(member.startDate)
         };
       })
     };
