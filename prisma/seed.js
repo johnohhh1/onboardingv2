@@ -11,10 +11,21 @@ const prisma = new PrismaClient({
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Clear all existing restaurants first
-  console.log('🗑️  Clearing existing restaurants...');
+  // Clear all existing data in the correct order to avoid foreign key violations
+  console.log('🗑️  Clearing existing data...');
+  
+  // Delete in order: tasks -> templates -> team members -> restaurants
+  await prisma.checklistTask.deleteMany({});
+  console.log('✅ Cleared checklist tasks');
+  
+  await prisma.checklistTemplate.deleteMany({});
+  console.log('✅ Cleared checklist templates');
+  
+  await prisma.teamMember.deleteMany({});
+  console.log('✅ Cleared team members');
+  
   await prisma.restaurant.deleteMany({});
-  console.log('✅ Cleared all existing restaurants');
+  console.log('✅ Cleared all restaurants');
 
   // Create exactly 7 restaurants as specified
   const restaurants = [
