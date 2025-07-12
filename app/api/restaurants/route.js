@@ -51,22 +51,46 @@ export async function DELETE(request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
+    console.log('🗑️  Attempting to delete restaurant with ID:', id);
+    
     if (!id) {
+      console.error('❌ No restaurant ID provided');
       return NextResponse.json(
         { error: 'Restaurant ID is required' },
         { status: 400 }
       );
     }
     
-    const restaurant = await prisma.restaurant.delete({
+    // First check if restaurant exists
+    const existingRestaurant = await prisma.restaurant.findUnique({
       where: { id: parseInt(id) }
     });
     
-    return NextResponse.json({ message: 'Restaurant deleted successfully' });
+    if (!existingRestaurant) {
+      console.error('❌ Restaurant not found with ID:', id);
+      return NextResponse.json(
+        { error: 'Restaurant not found' },
+        { status: 404 }
+      );
+    }
+    
+    console.log('✅ Found restaurant:', existingRestaurant.name);
+    
+    // Delete the restaurant
+    const deletedRestaurant = await prisma.restaurant.delete({
+      where: { id: parseInt(id) }
+    });
+    
+    console.log('✅ Successfully deleted restaurant:', deletedRestaurant.name);
+    
+    return NextResponse.json({ 
+      message: 'Restaurant deleted successfully',
+      deletedRestaurant: deletedRestaurant.name
+    });
   } catch (error) {
-    console.error('Error deleting restaurant:', error);
+    console.error('❌ Error deleting restaurant:', error);
     return NextResponse.json(
-      { error: 'Failed to delete restaurant' },
+      { error: `Failed to delete restaurant: ${error.message}` },
       { status: 500 }
     );
   }
