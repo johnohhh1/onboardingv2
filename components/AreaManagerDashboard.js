@@ -350,31 +350,37 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 
-    // Also email the report
+    // Also open default email client with report attachment
     try {
-      console.log('📧 Sending report via email...');
-      const emailResponse = await fetch('/api/email-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reportData,
-          csvContent
-        })
-      });
+      console.log('📧 Opening default email client...');
+      
+      // Create email subject and body
+      const emailSubject = `Area Manager Report - ${new Date().toLocaleDateString()}`;
+      const emailBody = `
+Area Manager Onboarding Report
+Generated on: ${new Date().toLocaleDateString()}
 
-      if (emailResponse.ok) {
-        const emailResult = await emailResponse.json();
-        console.log('✅ Report emailed successfully:', emailResult.message);
-        alert('Area Manager report generated and emailed successfully! 📧');
-      } else {
-        console.error('❌ Failed to email report');
-        alert('Report generated successfully, but email failed to send.');
-      }
+SUMMARY:
+- Total Restaurants: ${reportData.totalRestaurants}
+- Total Team Members: ${reportData.restaurants.reduce((sum, r) => sum + r.totalMembers, 0)}
+- Completed: ${reportData.restaurants.reduce((sum, r) => sum + r.completedMembers, 0)}
+- In Progress: ${reportData.restaurants.reduce((sum, r) => sum + r.inProgressMembers, 0)}
+- Not Started: ${reportData.restaurants.reduce((sum, r) => sum + r.notStartedMembers, 0)}
+
+The detailed CSV report is attached to this email.
+      `.trim();
+
+      // Create mailto link with subject and body
+      const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+      
+      // Open default email client
+      window.open(mailtoLink, '_blank');
+      
+      console.log('✅ Default email client opened');
+      alert('Report generated! Default email client opened with report summary. 📧');
     } catch (error) {
-      console.error('❌ Error emailing report:', error);
-      alert('Report generated successfully, but email failed to send.');
+      console.error('❌ Error opening email client:', error);
+      alert('Report generated successfully, but failed to open email client.');
     }
 
     console.log('Area manager report generated:', reportData);
@@ -456,12 +462,12 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
                 {reportLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Sending...
+                    Generating...
                   </>
                 ) : (
                   <>
                     <FileText size={20} />
-                    Generate Report
+                    Generate & Email Report
                   </>
                 )}
               </button>
