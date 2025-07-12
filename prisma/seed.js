@@ -14,66 +14,48 @@ async function main() {
   // Create initial restaurants
   const restaurants = [
     {
-      name: "Chili's Auburn Hills",
-      code: "605",
-      location: "Auburn Hills, MI",
-      address: "1234 Auburn Hills Blvd, Auburn Hills, MI 48326",
-      phone: "(248) 555-0123",
-      email: "john.olenski@chilis.com",
-      timezone: "America/Detroit"
-    },
-    {
-      name: "Chili's Shelby",
-      code: "420",
-      location: "Shelby, MI",
-      address: "5678 Shelby Rd, Shelby, MI 48315",
-      phone: "(586) 555-0124",
-      email: "mike.rodriguez@chilis.com",
-      timezone: "America/Detroit"
-    },
-    {
-      name: "Chili's Fort Gratiot",
-      code: "330",
+      name: "Chili's Ft Gratiot",
+      code: "1107",
       location: "Fort Gratiot, MI",
-      address: "9012 Fort Gratiot Ave, Fort Gratiot, MI 48059",
-      phone: "(810) 555-0125",
-      email: "sarah.johnson@chilis.com",
+      address: "1107 Gratiot Ave, Fort Gratiot, MI 48059",
+      phone: "(810) 555-0123",
+      email: "",
       timezone: "America/Detroit"
     },
     {
-      name: "Chili's O-Mall",
-      code: "240",
-      location: "O-Mall, MI",
-      address: "3456 O-Mall Dr, O-Mall, MI 48326",
-      phone: "(248) 555-0126",
-      email: "lisa.chen@chilis.com",
+      name: "Chili's Brandon",
+      code: "954",
+      location: "Brandon, MI",
+      address: "954 O-Mall Dr, Brandon, MI 48326",
+      phone: "(248) 555-0124",
+      email: "",
       timezone: "America/Detroit"
     },
     {
-      name: "Chili's Warren",
-      code: "180",
-      location: "Warren, MI",
-      address: "7890 Warren Blvd, Warren, MI 48088",
-      phone: "(586) 555-0127",
-      email: "bob.wilson@chilis.com",
-      timezone: "America/Detroit"
-    },
-    {
-      name: "Chili's Gratiot",
-      code: "150",
-      location: "Gratiot, MI",
-      address: "2345 Gratiot Ave, Gratiot, MI 48088",
-      phone: "(586) 555-0128",
-      email: "emma.davis@chilis.com",
-      timezone: "America/Detroit"
-    },
-    {
-      name: "Chili's Rochester",
-      code: "120",
+      name: "Chili's Micky",
+      code: "316",
       location: "Rochester, MI",
-      address: "6789 Rochester Rd, Rochester, MI 48307",
-      phone: "(248) 555-0129",
-      email: "david.miller@chilis.com",
+      address: "316 Rochester Rd, Rochester, MI 48307",
+      phone: "(248) 555-0125",
+      email: "",
+      timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Brad",
+      code: "195",
+      location: "Warren, MI",
+      address: "195 Warren Blvd, Warren, MI 48088",
+      phone: "(586) 555-0126",
+      email: "",
+      timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Keith",
+      code: "1422",
+      location: "Gratiot, MI",
+      address: "1422 Gratiot Ave, Gratiot, MI 48088",
+      phone: "(586) 555-0127",
+      email: "",
       timezone: "America/Detroit"
     }
   ];
