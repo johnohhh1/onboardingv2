@@ -14,65 +14,65 @@ async function main() {
   // Create initial restaurants
   const restaurants = [
     {
-      name: "Chili's Ft Gratiot",
-      code: "1107",
-      location: "Fort Gratiot, MI",
-      address: "1107 Gratiot Ave, Fort Gratiot, MI 48059",
-      phone: "(810) 555-0123",
+      name: "Chili's Auburn Hills",
+      code: "605",
+      location: "Auburn Hills, MI",
+      address: "1422 Squirrel Rd, Auburn Hills, MI 48326",
+      phone: "(248) 555-0123",
       email: "",
       timezone: "America/Detroit"
     },
     {
-      name: "Chili's Gratiot Ave",
-      code: "954",
-      location: "Gratiot, MI",
-      address: "954 Gratiot Ave, Gratiot, MI 48088",
-      phone: "(586) 555-0124",
+      name: "Chili's O-Mall",
+      code: "316",
+      location: "Troy, MI",
+      address: "456 Big Beaver Rd, Troy, MI 48083",
+      phone: "(248) 555-0124",
+      email: "",
+      timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Fort Gratiot",
+      code: "1107",
+      location: "Fort Gratiot, MI",
+      address: "1107 Gratiot Ave, Fort Gratiot, MI 48059",
+      phone: "(810) 555-0125",
       email: "",
       timezone: "America/Detroit"
     },
     {
       name: "Chili's Rochester",
-      code: "316",
+      code: "195",
       location: "Rochester, MI",
       address: "316 Rochester Rd, Rochester, MI 48307",
-      phone: "(248) 555-0125",
+      phone: "(248) 555-0126",
+      email: "",
+      timezone: "America/Detroit"
+    },
+    {
+      name: "Chili's Gratiot Avenue",
+      code: "954",
+      location: "Roseville, MI",
+      address: "954 Gratiot Ave, Roseville, MI 48066",
+      phone: "(586) 555-0127",
       email: "",
       timezone: "America/Detroit"
     },
     {
       name: "Chili's Warren",
-      code: "195",
+      code: "1422",
       location: "Warren, MI",
       address: "195 Warren Blvd, Warren, MI 48088",
-      phone: "(586) 555-0126",
-      email: "",
-      timezone: "America/Detroit"
-    },
-    {
-      name: "Chili's Auburn Hills",
-      code: "1422",
-      location: "Auburn Hills, MI",
-      address: "1422 Squirrel Rd, Auburn Hills, MI 48326",
-      phone: "(248) 555-0127",
-      email: "",
-      timezone: "America/Detroit"
-    },
-    {
-      name: "Chili's Sterling Heights",
-      code: "789",
-      location: "Sterling Heights, MI",
-      address: "789 Hall Rd, Sterling Heights, MI 48310",
       phone: "(586) 555-0128",
       email: "",
       timezone: "America/Detroit"
     },
     {
-      name: "Chili's Troy",
-      code: "456",
-      location: "Troy, MI",
-      address: "456 Big Beaver Rd, Troy, MI 48083",
-      phone: "(248) 555-0129",
+      name: "Chili's Shelby Creek",
+      code: "734",
+      location: "Shelby Creek, MI",
+      address: "734 Shelby Creek Rd, Shelby Creek, MI 48315",
+      phone: "(586) 555-0129",
       email: "",
       timezone: "America/Detroit"
     }
