@@ -204,6 +204,20 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
     return "bg-red-500"
   }
 
+  // Function to get dynamic status text based on completion percentage
+  const getStatusText = (progress) => {
+    if (progress === 100) return "COMPLETED"
+    if (progress > 0) return "IN PROGRESS"
+    return "NOT STARTED"
+  }
+
+  // Function to get dynamic status color based on completion percentage
+  const getDynamicStatusColor = (progress) => {
+    if (progress === 100) return "bg-green-500 text-white"
+    if (progress > 0) return "bg-blue-500 text-white"
+    return "bg-gray-400 text-gray-800"
+  }
+
   const [teamMembers, setTeamMembers] = useState([
     {
       id: "tm_1",
@@ -661,7 +675,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
           <h3>Progress Status</h3>
           <div class="info-item">
             <span class="info-label">Current Status:</span>
-            <span class="status-badge status-${member.status.toLowerCase().replace('_', '-')}">${member.status.replace('_', ' ')}</span>
+            <span class="status-badge status-${getStatusText(progressPercentage).toLowerCase().replace(' ', '-')}">${getStatusText(progressPercentage)}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Priority:</span>
@@ -734,7 +748,7 @@ Current Status:
 - Start Date: ${member.startDate}
 - Days in Onboarding: ${member.daysInOnboarding}
 - Progress: ${progressPercentage}% (${completedTasks.length} of ${totalTasks} tasks completed)
-- Status: ${member.status.replace('_', ' ')}
+- Status: ${getStatusText(progressPercentage)}
 - Assigned Trainer: ${member.assignedTrainer}
 - Last Activity: ${member.lastActivity}
 
@@ -790,7 +804,7 @@ ${currentRestaurant.name}
           position: member.position,
           employeeId: member.employeeId || 'N/A',
           startDate: member.startDate,
-          status: member.status,
+          status: getStatusText(progressPercentage),
           progressPercentage: progressPercentage,
           lastCompletedStep: lastCompletedStep,
           daysInOnboarding: member.daysInOnboarding,
@@ -908,12 +922,34 @@ ${currentRestaurant.name}
       }),
       statistics: {
         totalMembers: teamMembers.length,
-        completed: teamMembers.filter(tm => tm.status === 'COMPLETED').length,
-        inProgress: teamMembers.filter(tm => tm.status === 'IN_PROGRESS').length,
-        notStarted: teamMembers.filter(tm => tm.status === 'NOT_STARTED').length,
+        completed: teamMembers.filter(tm => {
+          const checklistData = tm.checklistData || {};
+          const completedTasks = Object.values(checklistData).filter(task => task.completed);
+          const totalTasks = 41;
+          const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+          return completionPercentage === 100;
+        }).length,
+        inProgress: teamMembers.filter(tm => {
+          const checklistData = tm.checklistData || {};
+          const completedTasks = Object.values(checklistData).filter(task => task.completed);
+          const totalTasks = 41;
+          const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+          return completedTasks.length > 0 && completionPercentage < 100;
+        }).length,
+        notStarted: teamMembers.filter(tm => {
+          const checklistData = tm.checklistData || {};
+          const completedTasks = Object.values(checklistData).filter(task => task.completed);
+          return completedTasks.length === 0;
+        }).length,
         highPriority: teamMembers.filter(tm => tm.priority === 'high').length,
         avgCompletionTime: 6.2,
-        completionRate: Math.round((teamMembers.filter(tm => tm.status === 'COMPLETED').length / teamMembers.length) * 100)
+        completionRate: Math.round((teamMembers.filter(tm => {
+          const checklistData = tm.checklistData || {};
+          const completedTasks = Object.values(checklistData).filter(task => task.completed);
+          const totalTasks = 41;
+          const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+          return completionPercentage === 100;
+        }).length / teamMembers.length) * 100)
       }
     };
 
@@ -1029,7 +1065,15 @@ ${currentRestaurant.name}
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.employeeId?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || member.status === filterStatus;
+    
+    // Calculate dynamic status based on completion percentage
+    const checklistData = member.checklistData || {};
+    const completedTasks = Object.values(checklistData).filter(task => task.completed);
+    const totalTasks = 41;
+    const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+    const dynamicStatus = getStatusText(completionPercentage);
+    
+    const matchesStatus = filterStatus === 'all' || dynamicStatus === filterStatus;
     const matchesPriority = filterPriority === 'all' || member.priority === filterPriority;
     return matchesSearch && matchesStatus && matchesPriority;
   });
@@ -1071,8 +1115,8 @@ ${currentRestaurant.name}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-200 truncate">{member.name}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(member.status)}`}>
-                    {member.status.replace('_', ' ')}
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getDynamicStatusColor(member.completionPercentage)}`}>
+                    {getStatusText(member.completionPercentage)}
                   </span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(member.priority)}`}>
                     {member.priority}
