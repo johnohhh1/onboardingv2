@@ -310,11 +310,16 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
   // Function to update checklist data
   const updateChecklistData = async (memberId, checklistData) => {
     try {
+      // Calculate completion percentage based on checklist data
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      const totalTasks = 41; // Total number of tasks in the checklist
+      const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+      
       // Update local state immediately for responsive UI
       setTeamMembers(prev => 
         prev.map(member => 
           member.id === memberId 
-            ? { ...member, checklistData }
+            ? { ...member, checklistData, completionPercentage }
             : member
         )
       );
@@ -483,26 +488,34 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
       const data = await response.json();
       
       // Transform database response to match frontend expectations
-      const transformedData = data.map(member => ({
-        id: member.id,
-        name: member.name,
-        email: member.email,
-        phone: member.phone,
-        position: member.position,
-        startDate: member.start_date ? new Date(member.start_date).toLocaleDateString() : '',
-        startTime: '09:00', // Default time since not stored in DB
-        employeeId: member.employee_id || '',
-        status: member.status,
-        priority: member.priority,
-        notes: member.notes ? JSON.parse(member.notes) : [],
-        checklistData: member.checklist_data || {},
-        // Add computed fields that don't exist in DB
-        daysInOnboarding: 0, // Calculate based on start date
-        completionPercentage: member.status === 'COMPLETED' ? 100 : 0,
-        lastActivity: 'Never',
-        estimatedCompletion: '7 days',
-        assignedTrainer: 'Unassigned'
-      }));
+      const transformedData = data.map(member => {
+        // Calculate completion percentage based on checklist data
+        const checklistData = member.checklist_data || {};
+        const completedTasks = Object.values(checklistData).filter(task => task.completed);
+        const totalTasks = 41; // Total number of tasks in the checklist
+        const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+        
+        return {
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          phone: member.phone,
+          position: member.position,
+          startDate: member.start_date ? new Date(member.start_date).toLocaleDateString() : '',
+          startTime: '09:00', // Default time since not stored in DB
+          employeeId: member.employee_id || '',
+          status: member.status,
+          priority: member.priority,
+          notes: member.notes ? JSON.parse(member.notes) : [],
+          checklistData: checklistData,
+          // Add computed fields that don't exist in DB
+          daysInOnboarding: 0, // Calculate based on start date
+          completionPercentage: completionPercentage,
+          lastActivity: 'Never',
+          estimatedCompletion: '7 days',
+          assignedTrainer: 'Unassigned'
+        };
+      });
       
       setTeamMembers(transformedData);
       console.log('Team members loaded from database:', transformedData);
