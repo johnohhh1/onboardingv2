@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
+import { supabase } from '../../../../lib/supabase';
 
 // GET /api/restaurants/[id] - Get a specific restaurant
 export async function GET(request, { params }) {
   try {
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id: params.id },
-      include: {
-        teamMembers: {
-          orderBy: { createdAt: 'desc' }
-        }
-      }
-    });
+    const { data: restaurant, error } = await supabase
+      .from('restaurants')
+      .select('*')
+      .eq('id', params.id)
+      .single();
     
-    if (!restaurant) {
+    if (error || !restaurant) {
       return NextResponse.json(
         { error: 'Restaurant not found' },
         { status: 404 }
@@ -35,9 +32,9 @@ export async function PUT(request, { params }) {
   try {
     const body = await request.json();
     
-    const updatedRestaurant = await prisma.restaurant.update({
-      where: { id: params.id },
-      data: {
+    const { data: updatedRestaurant, error } = await supabase
+      .from('restaurants')
+      .update({
         name: body.name,
         code: body.code,
         location: body.location,
@@ -48,8 +45,18 @@ export async function PUT(request, { params }) {
           ...body.settings,
           manager: body.manager
         }
-      }
-    });
+      })
+      .eq('id', params.id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ Supabase error:', error);
+      return NextResponse.json(
+        { error: 'Failed to update restaurant' },
+        { status: 500 }
+      );
+    }
     
     return NextResponse.json(updatedRestaurant);
   } catch (error) {
@@ -64,9 +71,18 @@ export async function PUT(request, { params }) {
 // DELETE /api/restaurants/[id] - Delete a restaurant
 export async function DELETE(request, { params }) {
   try {
-    await prisma.restaurant.delete({
-      where: { id: params.id }
-    });
+    const { error } = await supabase
+      .from('restaurants')
+      .delete()
+      .eq('id', params.id);
+    
+    if (error) {
+      console.error('❌ Supabase error:', error);
+      return NextResponse.json(
+        { error: 'Failed to delete restaurant' },
+        { status: 500 }
+      );
+    }
     
     return NextResponse.json({ message: 'Restaurant deleted successfully' });
   } catch (error) {
