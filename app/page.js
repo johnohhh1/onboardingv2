@@ -357,13 +357,11 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
                         </button>
                       </div>
                     </div>
-                    
                     <div 
                       onClick={() => handleRestaurantClick(restaurant)}
                       className="cursor-pointer"
                     >
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 transition-colors duration-200">{restaurant.name}</h3>
-                      
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">
                           <MapPin size={14} />
@@ -382,7 +380,6 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
                           {restaurant.email}
                         </div>
                       </div>
-
                       <button className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
                         <ArrowRight size={16} />
                         Enter Restaurant
@@ -392,7 +389,7 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
                 </div>
               ))}
             </div>
-
+            {/* Fix: Move the conditional rendering outside the fragment to avoid JSX ambiguity */}
             {filteredRestaurants.length === 0 && (
               <div className="text-center py-12">
                 <Building2 className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
