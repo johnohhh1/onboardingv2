@@ -8,9 +8,9 @@ export async function GET(request) {
     const restaurantId = searchParams.get('restaurantId');
     let query = supabase.from('team_members').select('*');
     if (restaurantId) {
-      query = query.eq('restaurant_id', restaurantId);
+      query = query.eq('restaurantId', restaurantId);
     }
-    query = query.order('created_at', { ascending: false });
+    query = query.order('createdAt', { ascending: false });
     const { data: teamMembers, error } = await query;
     if (error) {
       console.error('❌ Supabase error:', error);
@@ -46,17 +46,17 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
+    // Map the data to match the actual database schema (snake_case for Supabase/Postgres)
     const teamMemberData = {
       name: body.name,
       email: body.email || '',
       phone: body.phone || '',
       position: body.position || '',
-      start_date: body.startDate || null,
-      start_time: body.startTime || null,
-      employee_id: body.employeeId || '',
-      restaurant_id: body.restaurantId,
-      assigned_to_id: body.assignedToId || null,
-      status: body.status || 'NOT_STARTED'
+      start_date: body.startDate ? new Date(body.startDate) : null,
+      status: body.status || 'NOT_STARTED',
+      priority: body.priority || 'medium',
+      notes: body.notes || null,
+      restaurant_id: body.restaurantId
     };
     
     console.log('Team member data to insert:', teamMemberData);
