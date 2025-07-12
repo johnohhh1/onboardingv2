@@ -217,6 +217,30 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
     }
   };
 
+  const handleDeleteRestaurant = async (restaurant) => {
+    if (!confirm(`Are you sure you want to delete ${restaurant.name}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/restaurants?id=${restaurant.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setRestaurants(prev => prev.filter(r => r.id !== restaurant.id));
+        alert('Restaurant deleted successfully');
+      } else {
+        const error = await response.json();
+        alert(`Failed to delete restaurant: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting restaurant:', error);
+      alert('Error deleting restaurant. Please try again.');
+    }
+  };
+
   const handleRestaurantClick = (restaurant) => {
     console.log('Restaurant selected:', restaurant)
     setSelectedRestaurant(restaurant)
@@ -320,6 +344,16 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
                           title="Edit Restaurant"
                         >
                           <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteRestaurant(restaurant);
+                          }}
+                          className="text-gray-400 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 p-1 rounded transition-colors duration-200"
+                          title="Delete Restaurant"
+                        >
+                          <X size={16} />
                         </button>
                       </div>
                     </div>

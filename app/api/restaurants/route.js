@@ -43,4 +43,31 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+}
+
+// DELETE /api/restaurants - Delete a restaurant
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Restaurant ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    const restaurant = await prisma.restaurant.delete({
+      where: { id: parseInt(id) }
+    });
+    
+    return NextResponse.json({ message: 'Restaurant deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting restaurant:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete restaurant' },
+      { status: 500 }
+    );
+  }
 } 
