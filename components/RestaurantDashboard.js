@@ -531,11 +531,15 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
 
   // Function to update success stats
   const updateSuccessStats = () => {
+    console.log('Updating success stats with team members:', teamMembers);
+    
     // Calculate based on actual checklist progress
     const totalStarted = teamMembers.filter(m => {
       const checklistData = m.checklistData || {};
       const completedTasks = Object.values(checklistData).filter(task => task.completed);
-      return completedTasks.length > 0; // Has started checklist
+      const hasStarted = completedTasks.length > 0;
+      console.log(`${m.name}: ${completedTasks.length} completed tasks, hasStarted: ${hasStarted}`);
+      return hasStarted; // Has started checklist
     }).length;
     
     const completed = teamMembers.filter(m => {
@@ -543,10 +547,14 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
       const completedTasks = Object.values(checklistData).filter(task => task.completed);
       const totalTasks = 41; // Total number of tasks
       const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
-      return completionPercentage >= 80; // Consider completed if 80% or more done
+      const isCompleted = completionPercentage >= 80;
+      console.log(`${m.name}: ${completedTasks.length}/${totalTasks} = ${completionPercentage}%, isCompleted: ${isCompleted}`);
+      return isCompleted; // Consider completed if 80% or more done
     }).length;
     
     const successRate = totalStarted > 0 ? Math.round((completed / totalStarted) * 100) : 0;
+    
+    console.log(`Final stats: totalStarted=${totalStarted}, completed=${completed}, successRate=${successRate}%`);
     
     setSuccessStats({
       totalCompleted: completed,
