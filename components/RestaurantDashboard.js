@@ -196,6 +196,14 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
     email: "sarah.johnson@chilis.com"
   });
 
+  // Function to get progress color based on completion percentage
+  const getProgressColor = (percent) => {
+    if (percent === 100) return "bg-green-500"
+    if (percent >= 75) return "bg-blue-500"
+    if (percent >= 25) return "bg-yellow-500"
+    return "bg-red-500"
+  }
+
   const [teamMembers, setTeamMembers] = useState([
     {
       id: "tm_1",
@@ -579,6 +587,14 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
     const totalTasks = 41;
     const progressPercentage = Math.round((completedTasks.length / totalTasks) * 100);
     
+    // Function to get progress color for print CSS
+    const getPrintProgressColor = (percent) => {
+      if (percent === 100) return "#10b981" // green-500
+      if (percent >= 75) return "#3b82f6" // blue-500
+      if (percent >= 25) return "#eab308" // yellow-500
+      return "#ef4444" // red-500
+    }
+    
     // Create print-friendly HTML
     const printContent = `
       <!DOCTYPE html>
@@ -594,7 +610,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
           .info-item { margin-bottom: 10px; }
           .info-label { font-weight: bold; color: #374151; }
           .progress-bar { width: 100%; height: 20px; background-color: #e5e7eb; border-radius: 10px; overflow: hidden; }
-          .progress-fill { height: 100%; background-color: #10b981; transition: width 0.3s; }
+          .progress-fill { height: 100%; transition: width 0.3s; }
           .status-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
           .status-completed { background-color: #d1fae5; color: #065f46; }
           .status-progress { background-color: #fef3c7; color: #92400e; }
@@ -655,7 +671,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
             <span class="info-label">Progress:</span> ${progressPercentage}%
           </div>
           <div class="progress-bar">
-            <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+            <div class="progress-fill" style="width: ${progressPercentage}%; background-color: ${getPrintProgressColor(progressPercentage)}"></div>
           </div>
           <p><small>${completedTasks.length} of ${totalTasks} tasks completed</small></p>
         </div>
@@ -1097,10 +1113,7 @@ ${currentRestaurant.name}
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  member.status === 'COMPLETED' ? 'bg-green-600' : 
-                  member.status === 'IN_PROGRESS' ? 'bg-blue-600' : 'bg-gray-400'
-                }`}
+                className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(member.completionPercentage)}`}
                 style={{ width: `${member.completionPercentage}%` }}
               ></div>
             </div>
@@ -1421,7 +1434,7 @@ ${currentRestaurant.name}
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
                     <div
-                      className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+                      className={`${getProgressColor(successStats.successRate)} h-2 rounded-full transition-all duration-300`}
                       style={{ width: `${successStats.successRate}%` }}
                     ></div>
                   </div>
@@ -1461,7 +1474,7 @@ ${currentRestaurant.name}
                     <span className="font-medium text-gray-900 dark:text-white transition-colors duration-200">{stats.completionRate}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: `${stats.completionRate}%` }}></div>
+                    <div className={`${getProgressColor(stats.completionRate)} h-2 rounded-full transition-all duration-300`} style={{ width: `${stats.completionRate}%` }}></div>
                   </div>
                 </div>
                 <div>

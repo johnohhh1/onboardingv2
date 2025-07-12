@@ -9,8 +9,16 @@ import {
 
 const ChecklistModal = ({ isOpen, onClose, teamMember, onUpdate }) => {
   const [checklistData, setChecklistData] = useState({});
-  const [expandedStep, setExpandedStep] = useState(1);
+  const [expandedStep, setExpandedStep] = useState(null);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
+
+  // Function to get progress color based on completion percentage
+  const getProgressColor = (percent) => {
+    if (percent === 100) return "bg-green-500"
+    if (percent >= 75) return "bg-blue-500"
+    if (percent >= 25) return "bg-yellow-500"
+    return "bg-red-500"
+  }
 
   // Load existing checklist data when modal opens
   useEffect(() => {
@@ -617,7 +625,7 @@ const ChecklistModal = ({ isOpen, onClose, teamMember, onUpdate }) => {
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
             <div
-              className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+              className={`${getProgressColor(completionPercentage)} h-3 rounded-full transition-all duration-300`}
               style={{ width: `${completionPercentage}%` }}
             ></div>
           </div>
