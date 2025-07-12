@@ -308,14 +308,37 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
   };
 
   // Function to update checklist data
-  const updateChecklistData = (memberId, checklistData) => {
-    setTeamMembers(prev => 
-      prev.map(member => 
-        member.id === memberId 
-          ? { ...member, checklistData }
-          : member
-      )
-    );
+  const updateChecklistData = async (memberId, checklistData) => {
+    try {
+      // Update local state immediately for responsive UI
+      setTeamMembers(prev => 
+        prev.map(member => 
+          member.id === memberId 
+            ? { ...member, checklistData }
+            : member
+        )
+      );
+
+      // Save to database
+      const response = await fetch(`/api/team-members/${memberId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          checklistData: checklistData
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save checklist progress');
+      }
+
+      console.log('Checklist progress saved to database:', checklistData);
+    } catch (error) {
+      console.error('Error saving checklist progress:', error);
+      alert('Failed to save checklist progress. Please try again.');
+    }
   };
 
   // Function to add new team member

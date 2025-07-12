@@ -25,19 +25,30 @@ export async function PUT(request, { params }) {
     const body = await request.json();
     console.log('Updating team member with data:', body);
     
-    const updateData = {
-      name: body.name,
-      email: body.email,
-      phone: body.phone,
-      position: body.position,
-      start_date: body.startDate,
-      start_time: body.startTime,
-      employee_id: body.employeeId,
-      restaurant_id: body.restaurantId, // This should match the database column
-      assigned_to_id: body.assignedToId,
-      status: body.status,
-      completion_date: body.completionDate
-    };
+    // Handle different types of updates
+    let updateData = {};
+    
+    // If this is a checklist update (only checklistData in body)
+    if (body.checklistData && Object.keys(body).length === 1) {
+      updateData = {
+        checklist_data: body.checklistData
+      };
+    } else {
+      // Full team member update
+      updateData = {
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        position: body.position,
+        start_date: body.startDate,
+        start_time: body.startTime,
+        employee_id: body.employeeId,
+        restaurant_id: body.restaurantId,
+        assigned_to_id: body.assignedToId,
+        status: body.status,
+        completion_date: body.completionDate
+      };
+    }
     
     console.log('Team member data to update:', updateData);
     
