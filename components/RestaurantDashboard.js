@@ -531,8 +531,21 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
 
   // Function to update success stats
   const updateSuccessStats = () => {
-    const completed = teamMembers.filter(m => m.status === 'COMPLETED').length;
-    const totalStarted = teamMembers.filter(m => m.status !== 'NOT_STARTED').length;
+    // Calculate based on actual checklist progress
+    const totalStarted = teamMembers.filter(m => {
+      const checklistData = m.checklistData || {};
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      return completedTasks.length > 0; // Has started checklist
+    }).length;
+    
+    const completed = teamMembers.filter(m => {
+      const checklistData = m.checklistData || {};
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      const totalTasks = 41; // Total number of tasks
+      const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+      return completionPercentage >= 80; // Consider completed if 80% or more done
+    }).length;
+    
     const successRate = totalStarted > 0 ? Math.round((completed / totalStarted) * 100) : 0;
     
     setSuccessStats({
