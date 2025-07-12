@@ -190,6 +190,7 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [reportLoading, setReportLoading] = useState(false);
 
   // Fetch restaurants from API
   const fetchRestaurants = async () => {
@@ -268,8 +269,10 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
     }
   };
 
-  // Function to generate area manager report
-  const generateAreaReport = () => {
+  // Function to generate area manager report and email it
+  const generateAreaReport = async () => {
+    setReportLoading(true);
+    try {
     const reportData = {
       reportDate: new Date().toLocaleDateString(),
       totalRestaurants: restaurants.length,
@@ -347,8 +350,40 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
 
+    // Also email the report
+    try {
+      console.log('📧 Sending report via email...');
+      const emailResponse = await fetch('/api/email-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reportData,
+          csvContent
+        })
+      });
+
+      if (emailResponse.ok) {
+        const emailResult = await emailResponse.json();
+        console.log('✅ Report emailed successfully:', emailResult.message);
+        alert('Area Manager report generated and emailed successfully! 📧');
+      } else {
+        console.error('❌ Failed to email report');
+        alert('Report generated successfully, but email failed to send.');
+      }
+    } catch (error) {
+      console.error('❌ Error emailing report:', error);
+      alert('Report generated successfully, but email failed to send.');
+    }
+
     console.log('Area manager report generated:', reportData);
-    alert('Area Manager report generated!');
+    } catch (error) {
+      console.error('❌ Error generating report:', error);
+      alert('Failed to generate report. Please try again.');
+    } finally {
+      setReportLoading(false);
+    }
   };
 
   const areaStats = restaurants.reduce((acc, restaurant) => {
@@ -415,10 +450,20 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
               </button>
               <button 
                 onClick={generateAreaReport}
-                className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"
+                disabled={reportLoading}
+                className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FileText size={20} />
-                Generate Report
+                {reportLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <FileText size={20} />
+                    Generate Report
+                  </>
+                )}
               </button>
               <button 
                 onClick={() => {
