@@ -8,9 +8,9 @@ export async function GET(request) {
     const restaurantId = searchParams.get('restaurantId');
     let query = supabase.from('team_members').select('*');
     if (restaurantId) {
-      query = query.eq('restaurantId', restaurantId);
+      query = query.eq('restaurant_id', restaurantId);
     }
-    query = query.order('createdAt', { ascending: false });
+    query = query.order('created_at', { ascending: false });
     const { data: teamMembers, error } = await query;
     if (error) {
       console.error('❌ Supabase error:', error);
