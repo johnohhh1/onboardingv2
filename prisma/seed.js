@@ -11,6 +11,11 @@ const prisma = new PrismaClient({
 async function main() {
   console.log('🌱 Starting database seeding...');
 
+  // Clear all existing restaurants first
+  console.log('🗑️  Clearing existing restaurants...');
+  await prisma.restaurant.deleteMany({});
+  console.log('✅ Cleared all existing restaurants');
+
   // Create initial restaurants
   const restaurants = [
     {
@@ -81,18 +86,10 @@ async function main() {
   console.log('🏪 Creating restaurants...');
   
   for (const restaurantData of restaurants) {
-    const existingRestaurant = await prisma.restaurant.findUnique({
-      where: { code: restaurantData.code }
+    const restaurant = await prisma.restaurant.create({
+      data: restaurantData
     });
-
-    if (!existingRestaurant) {
-      const restaurant = await prisma.restaurant.create({
-        data: restaurantData
-      });
-      console.log(`✅ Created restaurant: ${restaurant.name}`);
-    } else {
-      console.log(`⏭️  Restaurant already exists: ${existingRestaurant.name}`);
-    }
+    console.log(`✅ Created restaurant: ${restaurant.name}`);
   }
 
   // Create default checklist template for each restaurant
