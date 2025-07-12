@@ -23,11 +23,11 @@ async function main() {
       timezone: "America/Detroit"
     },
     {
-      name: "Chili's Brandon",
+      name: "Chili's Gratiot Ave",
       code: "954",
-      location: "Brandon, MI",
-      address: "954 O-Mall Dr, Brandon, MI 48326",
-      phone: "(248) 555-0124",
+      location: "Gratiot, MI",
+      address: "954 Gratiot Ave, Gratiot, MI 48088",
+      phone: "(586) 555-0124",
       email: "",
       timezone: "America/Detroit"
     },
