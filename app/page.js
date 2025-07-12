@@ -414,7 +414,7 @@ const RestaurantSelectionPage = ({ onRestaurantSelect, onAreaManagerSelect }) =>
         onSave={handleSaveRestaurant}
       />
     </div>
-  )
+  );
 }
 
 export default function HomePage() {
