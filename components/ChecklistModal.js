@@ -12,6 +12,14 @@ const ChecklistModal = ({ isOpen, onClose, teamMember, onUpdate }) => {
   const [expandedStep, setExpandedStep] = useState(1);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
 
+  // Load existing checklist data when modal opens
+  useEffect(() => {
+    if (isOpen && teamMember) {
+      setChecklistData(teamMember.checklistData || {});
+      console.log('Loading existing checklist data:', teamMember.checklistData);
+    }
+  }, [isOpen, teamMember]);
+
   // Complete checklist structure with all 40+ tasks
   const checklistSteps = [
     {
