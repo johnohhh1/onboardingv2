@@ -1,6 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
 async function main() {
   console.log('🌱 Starting database seeding...');
@@ -173,8 +179,14 @@ async function main() {
 main()
   .catch((e) => {
     console.error('❌ Error during seeding:', e);
+    console.error('Stack trace:', e.stack);
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    try {
+      await prisma.$disconnect();
+      console.log('🔌 Database connection closed');
+    } catch (error) {
+      console.error('Error disconnecting from database:', error);
+    }
   }); 
