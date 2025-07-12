@@ -917,24 +917,78 @@ ${currentRestaurant.name}
     alert(`Detailed data export generated for ${currentRestaurant.name}!`);
   };
 
-  // Calculate dashboard statistics
+  // Calculate dashboard statistics based on actual checklist progress
   const stats = {
     total: teamMembers.length,
-    completed: teamMembers.filter(tm => tm.status === 'COMPLETED').length,
-    inProgress: teamMembers.filter(tm => tm.status === 'IN_PROGRESS').length,
-    notStarted: teamMembers.filter(tm => tm.status === 'NOT_STARTED').length,
+    completed: teamMembers.filter(tm => {
+      const checklistData = tm.checklistData || {};
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      const totalTasks = 41;
+      const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+      return completionPercentage >= 80; // Consider completed if 80% or more done
+    }).length,
+    inProgress: teamMembers.filter(tm => {
+      const checklistData = tm.checklistData || {};
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      const totalTasks = 41;
+      const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+      return completedTasks.length > 0 && completionPercentage < 80; // Has started but not completed
+    }).length,
+    notStarted: teamMembers.filter(tm => {
+      const checklistData = tm.checklistData || {};
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      return completedTasks.length === 0; // No checklist progress
+    }).length,
     highPriority: teamMembers.filter(tm => tm.priority === 'high').length,
     avgCompletionTime: 6.2,
-    completionRate: Math.round((teamMembers.filter(tm => tm.status === 'COMPLETED').length / teamMembers.length) * 100)
+    completionRate: Math.round((teamMembers.filter(tm => {
+      const checklistData = tm.checklistData || {};
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      const totalTasks = 41;
+      const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+      return completionPercentage >= 80;
+    }).length / teamMembers.length) * 100)
   };
 
-  // Recent activity feed
-  const recentActivity = [
-    { id: 1, type: 'completed', member: 'Jane Smith', action: 'completed onboarding', timestamp: '1 hour ago', icon: CheckCircle, color: 'text-green-600' },
-    { id: 2, type: 'started', member: 'John Doe', action: 'started Step 4 tasks', timestamp: '2 hours ago', icon: Clock, color: 'text-blue-600' },
-    { id: 3, type: 'note', member: 'John Doe', action: 'trainer added note', timestamp: '3 hours ago', icon: MessageSquare, color: 'text-orange-600' },
-    { id: 4, type: 'assigned', member: 'Bob Wilson', action: 'needs trainer assignment', timestamp: '1 day ago', icon: AlertTriangle, color: 'text-red-600' }
-  ];
+  // Recent activity feed based on actual team member data
+  const recentActivity = teamMembers
+    .filter(tm => {
+      const checklistData = tm.checklistData || {};
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      return completedTasks.length > 0; // Only show team members with activity
+    })
+    .slice(0, 4) // Show up to 4 recent activities
+    .map((tm, index) => {
+      const checklistData = tm.checklistData || {};
+      const completedTasks = Object.values(checklistData).filter(task => task.completed);
+      const totalTasks = 41;
+      const completionPercentage = Math.round((completedTasks.length / totalTasks) * 100);
+      
+      let action, icon, color;
+      if (completionPercentage >= 80) {
+        action = 'completed onboarding';
+        icon = CheckCircle;
+        color = 'text-green-600';
+      } else if (completedTasks.length > 0) {
+        action = `completed ${completedTasks.length} tasks`;
+        icon = Clock;
+        color = 'text-blue-600';
+      } else {
+        action = 'started onboarding';
+        icon = Clock;
+        color = 'text-blue-600';
+      }
+      
+      return {
+        id: index + 1,
+        type: completionPercentage >= 80 ? 'completed' : 'started',
+        member: tm.name,
+        action: action,
+        timestamp: 'Recently',
+        icon: icon,
+        color: color
+      };
+    });
 
   const getStatusColor = (status) => {
     switch (status) {
