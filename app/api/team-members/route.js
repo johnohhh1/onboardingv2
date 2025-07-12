@@ -26,19 +26,36 @@ export async function GET(request) {
 // POST /api/team-members - Create a new team member
 export async function POST(request) {
   try {
+    // Check environment variables first
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('❌ Missing Supabase environment variables');
+      return NextResponse.json({ 
+        error: 'Missing Supabase configuration',
+        details: 'Environment variables not set'
+      }, { status: 500 });
+    }
+
     const body = await request.json();
     console.log('Creating team member with data:', body);
     
+    // Validate required fields
+    if (!body.name || !body.restaurantId) {
+      return NextResponse.json({ 
+        error: 'Missing required fields',
+        details: 'Name and restaurantId are required'
+      }, { status: 400 });
+    }
+    
     const teamMemberData = {
       name: body.name,
-      email: body.email,
-      phone: body.phone,
-      position: body.position,
-      start_date: body.startDate,
-      start_time: body.startTime,
-      employee_id: body.employeeId,
-      restaurant_id: body.restaurantId, // This should match the database column
-      assigned_to_id: body.assignedToId,
+      email: body.email || '',
+      phone: body.phone || '',
+      position: body.position || '',
+      start_date: body.startDate || null,
+      start_time: body.startTime || null,
+      employee_id: body.employeeId || '',
+      restaurant_id: body.restaurantId,
+      assigned_to_id: body.assignedToId || null,
       status: body.status || 'NOT_STARTED'
     };
     
@@ -52,13 +69,19 @@ export async function POST(request) {
       
     if (error) {
       console.error('❌ Supabase error:', error);
-      return NextResponse.json({ error: `Failed to create team member: ${error.message}` }, { status: 500 });
+      return NextResponse.json({ 
+        error: `Failed to create team member: ${error.message}`,
+        details: error.details || error.hint || 'Unknown database error'
+      }, { status: 500 });
     }
     
     console.log('✅ Team member created successfully:', teamMember);
     return NextResponse.json(teamMember, { status: 201 });
   } catch (error) {
     console.error('Error creating team member:', error);
-    return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to create team member',
+      details: error.message 
+    }, { status: 500 });
   }
 } 
