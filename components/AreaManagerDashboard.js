@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, Building2, Users, Search, Eye, Edit2, Trash2, X, Save, ArrowRight, FileText, RotateCcw
 } from 'lucide-react';
@@ -12,29 +12,56 @@ const RestaurantRegistrationModal = ({ isOpen, onClose, onSave, editingRestauran
     name: editingRestaurant?.name || '',
     code: editingRestaurant?.code || '',
     location: editingRestaurant?.location || '',
-    manager: editingRestaurant?.manager || 'John Olenski',
+    address: editingRestaurant?.address || '',
+    phone: editingRestaurant?.phone || '(248) 555-0123',
     email: editingRestaurant?.email || 'john.olenski@chilis.com',
-    phone: editingRestaurant?.phone || '(248) 555-0123'
+    timezone: editingRestaurant?.timezone || 'America/Detroit'
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const restaurantData = {
-      ...formData,
-      id: editingRestaurant?.id || Date.now(),
-      status: 'active',
-      stats: {
-        totalMembers: 0,
-        completed: 0,
-        inProgress: 0,
-        notStarted: 0,
-        avgCompletionTime: 0,
-        lastActivity: 'Never'
-      },
-      recentActivity: []
-    };
-    onSave(restaurantData);
-    onClose();
+    
+    try {
+      const restaurantData = {
+        ...formData,
+        settings: {}
+      };
+
+      if (editingRestaurant) {
+        // Update existing restaurant
+        const response = await fetch(`/api/restaurants?id=${editingRestaurant.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(restaurantData)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update restaurant');
+        }
+
+        const updatedRestaurant = await response.json();
+        onSave(updatedRestaurant);
+      } else {
+        // Create new restaurant
+        const response = await fetch('/api/restaurants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(restaurantData)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create restaurant');
+        }
+
+        const newRestaurant = await response.json();
+        onSave(newRestaurant);
+      }
+
+      onClose();
+    } catch (error) {
+      console.error('Error saving restaurant:', error);
+      alert('Failed to save restaurant. Please try again.');
+    }
   };
 
   if (!isOpen) return null;
@@ -89,12 +116,49 @@ const RestaurantRegistrationModal = ({ isOpen, onClose, onSave, editingRestauran
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300 transition-colors duration-200">Manager *</label>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300 transition-colors duration-200">Address *</label>
             <input
               type="text"
-              value={formData.manager}
-              onChange={(e) => setFormData({...formData, manager: e.target.value})}
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
               className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200"
+              placeholder="e.g., 123 Main St"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300 transition-colors duration-200">Phone *</label>
+            <input
+              type="text"
+              value={formData.phone}
+              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200"
+              placeholder="(248) 555-0123"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300 transition-colors duration-200">Email *</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200"
+              placeholder="john.olenski@chilis.com"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300 transition-colors duration-200">Timezone *</label>
+            <input
+              type="text"
+              value={formData.timezone}
+              onChange={(e) => setFormData({...formData, timezone: e.target.value})}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200"
+              placeholder="America/Detroit"
               required
             />
           </div>
@@ -121,37 +185,37 @@ const RestaurantRegistrationModal = ({ isOpen, onClose, onSave, editingRestauran
 };
 
 const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
-  const [restaurants, setRestaurants] = useState([
-    {
-      id: 1,
-      name: "Chili's #605",
-      code: "605",
-      location: "Auburn Hills, MI",
-      manager: "John Olenski",
-      email: "john.olenski@chilis.com",
-      phone: "(248) 555-0123",
-      status: "active",
-      stats: {
-        totalMembers: 12,
-        completed: 8,
-        inProgress: 3,
-        notStarted: 1,
-        avgCompletionTime: 5.2,
-        lastActivity: "2 hours ago"
-      },
-      recentActivity: [
-        { type: "completed", member: "John Doe", timestamp: "1 hour ago" },
-        { type: "started", member: "Jane Smith", timestamp: "3 hours ago" }
-      ]
-    }
-  ]);
-
+  const [restaurants, setRestaurants] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Fetch restaurants from API
+  const fetchRestaurants = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/restaurants');
+      if (!response.ok) {
+        throw new Error('Failed to fetch restaurants');
+      }
+      const data = await response.json();
+      setRestaurants(data);
+      console.log('✅ Fetched restaurants:', data.length);
+    } catch (error) {
+      console.error('❌ Error fetching restaurants:', error);
+      alert('Failed to load restaurants. Please refresh the page.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
+
   const handleAddRestaurant = (restaurantData) => {
-    setRestaurants([...restaurants, { ...restaurantData, id: Date.now() }]);
+    setRestaurants(prev => [...prev, restaurantData]);
     console.log('Restaurant added:', restaurantData);
   };
 
@@ -211,19 +275,19 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
       totalRestaurants: restaurants.length,
       restaurants: restaurants.map(restaurant => {
         // Calculate restaurant statistics
-        const totalMembers = restaurant.stats.totalMembers;
-        const completedMembers = restaurant.stats.completed;
-        const inProgressMembers = restaurant.stats.inProgress;
-        const notStartedMembers = restaurant.stats.notStarted;
+        const totalMembers = restaurant.stats?.totalMembers || 0;
+        const completedMembers = restaurant.stats?.completed || 0;
+        const inProgressMembers = restaurant.stats?.inProgress || 0;
+        const notStartedMembers = restaurant.stats?.notStarted || 0;
         const completionRate = totalMembers > 0 ? Math.round((completedMembers / totalMembers) * 100) : 0;
-        const avgCompletionTime = restaurant.stats.avgCompletionTime;
-        const lastActivity = restaurant.stats.lastActivity;
+        const avgCompletionTime = restaurant.stats?.avgCompletionTime || 0;
+        const lastActivity = restaurant.stats?.lastActivity || 'Never';
 
         return {
           restaurantName: restaurant.name,
           restaurantCode: restaurant.code,
           location: restaurant.location,
-          manager: restaurant.manager,
+          manager: restaurant.manager || 'N/A',
           totalMembers: totalMembers,
           completedMembers: completedMembers,
           inProgressMembers: inProgressMembers,
@@ -231,7 +295,7 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
           completionRate: completionRate,
           avgCompletionTime: avgCompletionTime,
           lastActivity: lastActivity,
-          status: restaurant.status
+          status: restaurant.status || 'active'
         };
       })
     };
@@ -289,10 +353,10 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
 
   const areaStats = restaurants.reduce((acc, restaurant) => {
     acc.totalRestaurants += 1;
-    acc.totalMembers += restaurant.stats.totalMembers;
-    acc.totalCompleted += restaurant.stats.completed;
-    acc.totalInProgress += restaurant.stats.inProgress;
-    acc.totalNotStarted += restaurant.stats.notStarted;
+    acc.totalMembers += restaurant.stats?.totalMembers || 0;
+    acc.totalCompleted += restaurant.stats?.completed || 0;
+    acc.totalInProgress += restaurant.stats?.inProgress || 0;
+    acc.totalNotStarted += restaurant.stats?.notStarted || 0;
     return acc;
   }, {
     totalRestaurants: 0,
@@ -305,8 +369,19 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
   const filteredRestaurants = restaurants.filter(restaurant =>
     restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     restaurant.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    restaurant.manager.toLowerCase().includes(searchTerm.toLowerCase())
+    (restaurant.manager && restaurant.manager.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading restaurants...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -412,7 +487,7 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-200">{restaurant.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">{restaurant.location}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">Manager: {restaurant.manager}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors duration-200">Code: {restaurant.code}</p>
                     </div>
                   </div>
                 </div>
@@ -421,19 +496,19 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{restaurant.stats.totalMembers}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{restaurant.stats?.totalMembers || 0}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">Total</p>
                   </div>
                   <div className="text-center p-3 bg-green-50 dark:bg-green-900 rounded-lg cursor-pointer hover:bg-green-100 dark:hover:bg-green-800 transition-colors">
-                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">{restaurant.stats.completed}</p>
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">{restaurant.stats?.completed || 0}</p>
                     <p className="text-xs text-green-600 dark:text-green-400">Completed</p>
                   </div>
                   <div className="text-center p-3 bg-orange-50 dark:bg-orange-900 rounded-lg cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-800 transition-colors">
-                    <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{restaurant.stats.inProgress}</p>
+                    <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{restaurant.stats?.inProgress || 0}</p>
                     <p className="text-xs text-orange-600 dark:text-orange-400">In Progress</p>
                   </div>
                   <div className="text-center p-3 bg-red-50 dark:bg-red-900 rounded-lg cursor-pointer hover:bg-red-100 dark:hover:bg-red-800 transition-colors">
-                    <p className="text-2xl font-bold text-red-700 dark:text-red-300">{restaurant.stats.notStarted}</p>
+                    <p className="text-2xl font-bold text-red-700 dark:text-red-300">{restaurant.stats?.notStarted || 0}</p>
                     <p className="text-xs text-red-600 dark:text-red-400">Not Started</p>
                   </div>
                 </div>
@@ -461,7 +536,9 @@ const AreaManagerDashboard = ({ onRestaurantSelect, onBack }) => {
         {filteredRestaurants.length === 0 && (
           <div className="text-center py-12">
             <Building2 className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
-            <p className="text-gray-600 dark:text-gray-400">No restaurants found matching your search.</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {restaurants.length === 0 ? 'No restaurants found. Add your first restaurant to get started.' : 'No restaurants found matching your search.'}
+            </p>
           </div>
         )}
       </div>
