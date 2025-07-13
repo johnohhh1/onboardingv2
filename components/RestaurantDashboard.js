@@ -892,13 +892,13 @@ ${currentRestaurant.name}
     const csvRows = reportData.teamMembers.map(member => [
       member.name,
       member.position,
-      member.employeeId,
+      member.employeeId || '',          // <-- Pull from top-level team member field
       member.startDate,
       member.status,
       `${member.progressPercentage}%`,
       member.lastCompletedStep,
       member.daysInOnboarding,
-      member.assignedTrainer,
+      member.assignedTrainer || '',         // <-- Pull from top-level team member field
       member.lastActivity,
       member.estimatedCompletion
     ]);
