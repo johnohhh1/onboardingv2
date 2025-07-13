@@ -447,7 +447,10 @@ const ChecklistModal = ({ isOpen, onClose, teamMember, onUpdate }) => {
 
   const saveProgress = () => {
     if (onUpdate) {
-      onUpdate(teamMember.id, checklistData);
+      // Copy trainerName and employeeId from checklistData if present
+      const trainerName = checklistData['assign_trainer']?.trainerName || teamMember.trainerName;
+      const employeeId = checklistData['person_number']?.personNumber || teamMember.employeeId;
+      onUpdate(teamMember.id, checklistData, { trainerName, employeeId });
     }
     setUnsavedChanges(false);
     console.log('Progress saved:', checklistData);

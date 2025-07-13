@@ -389,7 +389,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
   };
 
   // Function to update checklist data
-  const updateChecklistData = async (memberId, checklistData) => {
+  const updateChecklistData = async (memberId, checklistData, fields = {}) => {
     try {
       // Calculate completion percentage based on checklist data
       const completedTasks = Object.values(checklistData).filter(task => task.completed);
@@ -400,27 +400,36 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
       setTeamMembers(prev => 
         prev.map(member => 
           member.id === memberId 
-            ? { ...member, checklistData, completionPercentage }
+            ? {
+                ...member,
+                checklistData,
+                completionPercentage,
+                ...(fields.trainerName !== undefined ? { assignedTrainer: fields.trainerName } : {}),
+                ...(fields.employeeId !== undefined ? { employeeId: fields.employeeId } : {})
+              }
             : member
         )
       );
 
       // Save to database
+      const body = {
+        checklistData: checklistData,
+        ...(fields.trainerName !== undefined ? { assignedTrainer: fields.trainerName } : {}),
+        ...(fields.employeeId !== undefined ? { employeeId: fields.employeeId } : {})
+      };
       const response = await fetch(`/api/team-members/${memberId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          checklistData: checklistData
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
         throw new Error('Failed to save checklist progress');
       }
 
-      console.log('Checklist progress saved to database:', checklistData);
+      console.log('Checklist progress saved to database:', checklistData, fields);
     } catch (error) {
       console.error('Error saving checklist progress:', error);
       alert('Failed to save checklist progress. Please try again.');
