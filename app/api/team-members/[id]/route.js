@@ -34,17 +34,14 @@ export async function PUT(request, { params }) {
         checklist_data: body.checklistData
       };
     } else {
-      // Full team member update
+      // Full team member update - only use fields that exist in the database
       updateData = {
         name: body.name,
         email: body.email,
         phone: body.phone,
         position: body.position,
         start_date: body.startDate,
-        start_time: body.startTime,
-        employee_id: body.employeeId,
         restaurant_id: body.restaurantId,
-        assigned_to_id: body.assignedToId,
         status: body.status,
         completion_date: body.completionDate
       };

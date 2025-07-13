@@ -411,25 +411,29 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
         )
       );
 
-      // Save to database
-      const body = {
-        checklistData: checklistData,
+      // Store employeeId and assignedTrainer in checklistData JSON field
+      const updatedChecklistData = {
+        ...checklistData,
         ...(fields.trainerName !== undefined ? { assignedTrainer: fields.trainerName } : {}),
         ...(fields.employeeId !== undefined ? { employeeId: fields.employeeId } : {})
       };
+
+      // Save to database - only send checklistData
       const response = await fetch(`/api/team-members/${memberId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          checklistData: updatedChecklistData
+        }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to save checklist progress');
       }
 
-      console.log('Checklist progress saved to database:', checklistData, fields);
+      console.log('Checklist progress saved to database:', updatedChecklistData);
     } catch (error) {
       console.error('Error saving checklist progress:', error);
       alert('Failed to save checklist progress. Please try again.');
@@ -458,6 +462,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
       const savedMember = await response.json();
       
       // Transform the saved member to match frontend expectations
+      const checklistData = savedMember.checklist_data || {};
       const transformedMember = {
         id: savedMember.id,
         name: savedMember.name,
@@ -466,17 +471,17 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
         position: savedMember.position,
         startDate: savedMember.start_date ? new Date(savedMember.start_date).toLocaleDateString() : '',
         startTime: '09:00', // Default time since not stored in DB
-        employeeId: savedMember.employee_id || memberData.employeeId || '',
+        employeeId: checklistData.employeeId || memberData.employeeId || '',
         status: savedMember.status,
         priority: savedMember.priority,
         notes: savedMember.notes ? JSON.parse(savedMember.notes) : [],
-        checklistData: savedMember.checklist_data || {},
+        checklistData: checklistData,
         // Add computed fields that don't exist in DB
         daysInOnboarding: 0,
         completionPercentage: savedMember.status === 'COMPLETED' ? 100 : 0,
         lastActivity: 'Never',
         estimatedCompletion: '7 days',
-        assignedTrainer: savedMember.assigned_trainer || memberData.assignedTrainer || 'Unassigned'
+        assignedTrainer: checklistData.assignedTrainer || memberData.assignedTrainer || 'Unassigned'
       };
       
       // Update local state with the transformed member
@@ -593,7 +598,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
           position: member.position,
           startDate: member.start_date ? new Date(member.start_date).toLocaleDateString() : '',
           startTime: '09:00', // Default time since not stored in DB
-          employeeId: member.employee_id || '',
+          employeeId: checklistData.employeeId || '',
           status: member.status,
           priority: member.priority,
           notes: member.notes ? JSON.parse(member.notes) : [],
@@ -603,7 +608,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
           completionPercentage: completionPercentage,
           lastActivity: getLastActivity({ checklistData }),
           estimatedCompletion: calculateEstimatedCompletion(member.start_date),
-          assignedTrainer: member.assigned_trainer || 'Unassigned'
+          assignedTrainer: checklistData.assignedTrainer || 'Unassigned'
         };
       });
       
