@@ -162,6 +162,17 @@ const TeamMemberRegistrationModal = ({ isOpen, onClose, onSave, editingMember = 
             </select>
           </div>
           
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300 transition-colors duration-200">Assigned Trainer</label>
+            <input
+              type="text"
+              value={formData.assignedTrainer}
+              onChange={(e) => setFormData({...formData, assignedTrainer: e.target.value})}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200"
+              placeholder="e.g., Mike Smith"
+            />
+          </div>
+          
           <div className="flex gap-3 pt-4">
             <button 
               type="button" 
@@ -446,7 +457,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
         position: savedMember.position,
         startDate: savedMember.start_date ? new Date(savedMember.start_date).toLocaleDateString() : '',
         startTime: '09:00', // Default time since not stored in DB
-        employeeId: savedMember.employee_id || '',
+        employeeId: savedMember.employee_id || memberData.employeeId || '',
         status: savedMember.status,
         priority: savedMember.priority,
         notes: savedMember.notes ? JSON.parse(savedMember.notes) : [],
@@ -456,7 +467,7 @@ const RestaurantDashboard = ({ restaurant, onBack }) => {
         completionPercentage: savedMember.status === 'COMPLETED' ? 100 : 0,
         lastActivity: 'Never',
         estimatedCompletion: '7 days',
-        assignedTrainer: 'Unassigned'
+        assignedTrainer: savedMember.assigned_trainer || memberData.assignedTrainer || 'Unassigned'
       };
       
       // Update local state with the transformed member
